@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KlimazonenRouteImport } from './routes/klimazonen'
+import { Route as UeberRouteImport } from './routes/ueber'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KlimazonenRoute = KlimazonenRouteImport.update({
+  id: '/klimazonen',
+  path: '/klimazonen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UeberRoute = UeberRouteImport.update({
+  id: '/ueber',
+  path: '/ueber',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/klimazonen': typeof KlimazonenRoute
+  '/ueber': typeof UeberRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/klimazonen': typeof KlimazonenRoute
+  '/ueber': typeof UeberRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/klimazonen': typeof KlimazonenRoute
+  '/ueber': typeof UeberRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/klimazonen' | '/ueber'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/klimazonen' | '/ueber'
+  id: '__root__' | '/' | '/klimazonen' | '/ueber'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  KlimazonenRoute: typeof KlimazonenRoute
+  UeberRoute: typeof UeberRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/klimazonen': {
+      id: '/klimazonen'
+      path: '/klimazonen'
+      fullPath: '/klimazonen'
+      preLoaderRoute: typeof KlimazonenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ueber': {
+      id: '/ueber'
+      path: '/ueber'
+      fullPath: '/ueber'
+      preLoaderRoute: typeof UeberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  KlimazonenRoute: KlimazonenRoute,
+  UeberRoute: UeberRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
