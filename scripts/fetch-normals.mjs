@@ -1,4 +1,5 @@
 import fs from "fs";
+import zlib from "zlib";
 
 const seed = fs
   .readFileSync("scripts/seed.txt", "utf8")
@@ -9,56 +10,87 @@ const seed = fs
     return { id, name, country, countryDe, continent, lat: +lat, lon: +lon };
   });
 
+const meteo = JSON.parse(fs.readFileSync("/tmp/st.json", "utf8"));
+
 const outPath = "src/data/stations.json";
 let out = {};
 try {
   out = JSON.parse(fs.readFileSync(outPath, "utf8"));
 } catch {}
 
-const limit = Number(process.argv[2] ?? 40);
-const todo = seed.filter((s) => !out[s.id]).slice(0, limit);
-console.log("remaining total", seed.filter((s) => !out[s.id]).length, "this run", todo.length);
+const R = 6371;
+const hav = (a, b, c, d) => {
+  const p = Math.PI / 180;
+  const x = Math.sin(((c - a) * p) / 2) ** 2 +
+    Math.cos(a * p) * Math.cos(c * p) * Math.sin(((d - b) * p) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+};
 
-const save = () => fs.writeFileSync(outPath, JSON.stringify(out, null, 0));
+async function normals(id) {
+  const res = await fetch(`https://bulk.meteostat.net/v2/normals/${id}.csv.gz`);
+  if (!res.ok) return null;
+  const buf = Buffer.from(await res.arrayBuffer());
+  let text;
+  try {
+    text = zlib.gunzipSync(buf).toString("utf8");
+  } catch {
+    return null;
+  }
+  const rows = text
+    .trim()
+    .split("\n")
+    .map((l) => l.split(","))
+    .filter((r) => r.length >= 6);
+  if (!rows.length) return null;
+  const periods = [...new Set(rows.map((r) => `${r[0]}-${r[1]}`))];
+  const period = periods.includes("1991-2020") ? "1991-2020" : periods[periods.length - 1];
+  const sel = rows.filter((r) => `${r[0]}-${r[1]}` === period);
+  if (sel.length !== 12) return null;
+  const tmin = Array(12).fill(null);
+  const tmax = Array(12).fill(null);
+  const prec = Array(12).fill(null);
+  for (const r of sel) {
+    const m = +r[2] - 1;
+    tmin[m] = r[3] === "" ? null : +r[3];
+    tmax[m] = r[4] === "" ? null : +r[4];
+    prec[m] = r[5] === "" ? null : +r[5];
+  }
+  if (tmin.some((v) => v === null) || tmax.some((v) => v === null) || prec.some((v) => v === null))
+    return null;
+  const r1 = (x) => Math.round(x * 10) / 10;
+  return {
+    period,
+    tmin,
+    tmax,
+    prec: prec.map((p) => Math.round(p)),
+    temp: tmin.map((v, i) => r1((v + tmax[i]) / 2)),
+  };
+}
+
+const todo = seed.filter((s) => !out[s.id]);
+console.log("todo", todo.length);
 
 async function one(s) {
-  const url =
-    `https://archive-api.open-meteo.com/v1/archive?latitude=${s.lat}&longitude=${s.lon}` +
-    `&start_date=1991-01-01&end_date=2020-12-31` +
-    `&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=UTC`;
-  for (let a = 0; a < 4; a++) {
+  const near = meteo
+    .map((m) => ({ m, d: hav(s.lat, s.lon, m.location.latitude, m.location.longitude) }))
+    .filter((x) => x.d < 150)
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 8);
+  for (const { m, d } of near) {
     try {
-      const r = await fetch(url);
-      if (!r.ok) {
-        await new Promise((z) => setTimeout(z, 8000 * (a + 1)));
-        continue;
-      }
-      const j = await r.json();
-      const d = j.daily;
-      const acc = Array.from({ length: 12 }, () => ({
-        t: 0, tc: 0, mx: 0, mxc: 0, mn: 0, mnc: 0, p: 0, years: new Set(),
-      }));
-      for (let i = 0; i < d.time.length; i++) {
-        const m = +d.time[i].slice(5, 7) - 1;
-        const A = acc[m];
-        if (d.temperature_2m_mean[i] != null) { A.t += d.temperature_2m_mean[i]; A.tc++; }
-        if (d.temperature_2m_max[i] != null) { A.mx += d.temperature_2m_max[i]; A.mxc++; }
-        if (d.temperature_2m_min[i] != null) { A.mn += d.temperature_2m_min[i]; A.mnc++; }
-        if (d.precipitation_sum[i] != null) { A.p += d.precipitation_sum[i]; A.years.add(d.time[i].slice(0, 4)); }
-      }
-      const r1 = (x) => Math.round(x * 10) / 10;
+      const n = await normals(m.id);
+      if (!n) continue;
       out[s.id] = {
         ...s,
-        elevation: Math.round(j.elevation),
-        temp: acc.map((A) => r1(A.t / A.tc)),
-        tmax: acc.map((A) => r1(A.mx / A.mxc)),
-        tmin: acc.map((A) => r1(A.mn / A.mnc)),
-        prec: acc.map((A) => Math.round(A.p / A.years.size)),
+        elevation: Math.round(m.location.elevation ?? 0),
+        temp: n.temp,
+        tmax: n.tmax,
+        tmin: n.tmin,
+        prec: n.prec,
+        source: `Meteostat ${m.id} (${m.name.en}, ${Math.round(d)} km, ${n.period})`,
       };
       return;
-    } catch {
-      await new Promise((z) => setTimeout(z, 8000 * (a + 1)));
-    }
+    } catch {}
   }
   console.log("FAIL", s.id);
 }
@@ -66,11 +98,9 @@ async function one(s) {
 let idx = 0;
 async function worker() {
   while (idx < todo.length) {
-    const s = todo[idx++];
-    await one(s);
-    save();
+    await one(todo[idx++]);
   }
 }
-await Promise.all(Array.from({ length: 3 }, worker));
-save();
+await Promise.all(Array.from({ length: 6 }, worker));
+fs.writeFileSync(outPath, JSON.stringify(out));
 console.log("stored", Object.keys(out).length);
