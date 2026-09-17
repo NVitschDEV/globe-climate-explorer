@@ -157,6 +157,7 @@ export default function Globe({
   return (
     <Canvas
       camera={{ position: [0, 0, 5.2], fov: 45 }}
+      gl={{ preserveDrawingBuffer: true }}
       onPointerDown={() => setInteracting(true)}
       dpr={[1, 2]}
     >
