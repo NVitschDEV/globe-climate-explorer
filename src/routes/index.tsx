@@ -8,10 +8,12 @@ import { useLang } from "@/lib/i18n";
 const Globe = lazy(() => import("@/components/Globe"));
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    station: typeof search["station"] === "string" ? search["station"] : undefined,
-    compare: typeof search["compare"] === "string" ? search["compare"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const out: { station?: string; compare?: string } = {};
+    if (typeof search["station"] === "string") out.station = search["station"];
+    if (typeof search["compare"] === "string") out.compare = search["compare"];
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Klimadiagramme — Weltklima auf dem interaktiven Globus" },
