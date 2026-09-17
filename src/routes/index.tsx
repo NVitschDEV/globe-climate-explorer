@@ -8,10 +8,12 @@ import { useLang } from "@/lib/i18n";
 const Globe = lazy(() => import("@/components/Globe"));
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    station: typeof search["station"] === "string" ? search["station"] : undefined,
-    compare: typeof search["compare"] === "string" ? search["compare"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const out: { station?: string; compare?: string } = {};
+    if (typeof search["station"] === "string") out.station = search["station"];
+    if (typeof search["compare"] === "string") out.compare = search["compare"];
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Klimadiagramme — Weltklima auf dem interaktiven Globus" },
@@ -53,7 +55,17 @@ function Index() {
   const selected = stationId ? STATIONS.find((s) => s.id === stationId) : undefined;
 
   const setSearch = (next: { station?: string | undefined; compare?: string | undefined }) =>
-    navigate({ search: (prev) => ({ ...prev, ...next }), replace: true });
+    navigate({
+      search: (prev) => {
+        const merged: { station?: string; compare?: string } = {};
+        const station = "station" in next ? next.station : prev.station;
+        const compare = "compare" in next ? next.compare : prev.compare;
+        if (station) merged.station = station;
+        if (compare) merged.compare = compare;
+        return merged;
+      },
+      replace: true,
+    });
 
   return (
     <div className="relative flex h-screen flex-col overflow-hidden bg-background">
