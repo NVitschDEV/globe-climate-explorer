@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { X, Link2, Check } from "lucide-react";
 import ModernChart from "@/components/charts/ModernChart";
@@ -37,10 +36,9 @@ export default function StationPanel({
   const zone = koeppenMeta(station.zone);
   const compare = compareId ? STATIONS.find((s) => s.id === compareId) : undefined;
 
-  const fetchCurrent = useServerFn(getCurrentYear);
   const current = useQuery({
     queryKey: ["current", station.id],
-    queryFn: () => fetchCurrent({ data: { lat: station.lat, lon: station.lon } }),
+    queryFn: () => getCurrentYear({ lat: station.lat, lon: station.lon }),
     staleTime: 1000 * 60 * 60,
   });
 

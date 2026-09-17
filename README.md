@@ -1,24 +1,50 @@
 # Globe Climate Explorer
 
-Please redesign https://klimadiagramme.de to be a website with a globe where you can click on the stations to view the data
+An interactive 3D globe for exploring climate data: click a station to see
+its monthly temperature and precipitation as a modern chart or a classic
+Walter-Lieth climate diagram. Inspired by
+[klimadiagramme.de](https://klimadiagramme.de) by Bernhard Mühr.
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/6cef57b4-d863-4bb1-b1e8-c4ae9abf6e60).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- **Climate normals (1991–2020):** [Meteostat](https://meteostat.net) (DWD, NOAA, ECCC and others)
+- **Current year / reanalysis:** [Open-Meteo](https://open-meteo.com) (ERA5)
+- **Earth texture:** NASA Blue Marble
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requires Node.js 20+.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+npm install
 npm run dev
 ```
+
+## Building
+
+```sh
+npm run build
+```
+
+This produces a static site in `dist/`, including a `404.html` fallback so
+client-side routes (e.g. `/klimazonen`) work correctly when hosted on
+GitHub Pages.
+
+## Deploying to GitHub Pages
+
+This repo includes a GitHub Actions workflow
+(`.github/workflows/deploy.yml`) that builds and deploys the site to GitHub
+Pages automatically on every push to `main`.
+
+To enable it:
+
+1. Push this repository to GitHub.
+2. In the repo, go to **Settings → Pages** and set **Source** to
+   **GitHub Actions**.
+3. Push to `main` (or run the workflow manually from the **Actions** tab).
+
+The workflow automatically sets the Vite `base` path to `/<repo-name>/` for
+project sites, or `/` if the repository is a user/organization page (named
+`<username>.github.io`). No manual configuration is needed.
+
+If you'd rather deploy elsewhere (Netlify, Vercel, Cloudflare Pages, your own
+server, etc.), just run `npm run build` and upload the contents of `dist/` —
+it's a fully static site.
