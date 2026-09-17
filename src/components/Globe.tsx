@@ -161,8 +161,8 @@ export default function Globe({
       onPointerDown={() => setInteracting(true)}
       dpr={[1, 2]}
     >
-      <ambientLight intensity={1.1} />
-      <directionalLight position={[5, 3, 5]} intensity={1.3} />
+      <ambientLight intensity={1.8} />
+      <directionalLight position={[5, 3, 5]} intensity={0.7} />
       <Stars />
       <Suspense fallback={null}>
         <Rotator paused={interacting || !!selected} target={target}>
