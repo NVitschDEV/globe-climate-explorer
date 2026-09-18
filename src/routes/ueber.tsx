@@ -46,10 +46,10 @@ function About() {
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>
                 {de ? "Klimanormalwerte 1991–2020: " : "Climate normals 1991–2020: "}
-                <a className="text-foreground underline" href="https://meteostat.net" target="_blank" rel="noreferrer">
-                  Meteostat
+                <a className="text-foreground underline" href="https://power.larc.nasa.gov" target="_blank" rel="noreferrer">
+                  NASA POWER
                 </a>
-                {de ? " (DWD, NOAA, ECCC u. a.)" : " (DWD, NOAA, ECCC and others)"}
+                {de ? " (MERRA-2, jeweils an den exakten Koordinaten)" : " (MERRA-2, at each location's exact coordinates)"}
               </li>
               <li>
                 {de ? "Aktuelles Jahr und Reanalyse: " : "Current year and reanalysis: "}
@@ -71,8 +71,8 @@ function About() {
           </div>
           <p className="text-xs">
             {de
-              ? "Hinweis: Normalwerte stammen von der jeweils nächstgelegenen amtlichen Station; kleine Abweichungen zu Stadtwerten sind möglich."
-              : "Note: normals come from the nearest official station; small differences from city values are possible."}
+              ? "Hinweis: Die Normalwerte sind modellierte Rasterdaten für die jeweiligen Koordinaten. Abweichungen zu Messwerten einzelner Wetterstationen sind möglich."
+              : "Note: normals are modelled gridded data for each location. They may differ from observations at individual weather stations."}
           </p>
         </div>
       </div>
