@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { OrbitControls, Html } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { useMemo, useRef, useState, Suspense, useEffect } from "react";
 import * as THREE from "three";
 import type { Station } from "@/data/stations";
@@ -71,13 +71,6 @@ function StationPoints({
           </mesh>
         );
       })}
-      {hover && (
-        <Html position={toVec(hover.lat, hover.lon, RADIUS + 0.09)} center distanceFactor={7}>
-          <div className="pointer-events-none whitespace-nowrap rounded-md border border-border bg-card/95 px-2 py-1 text-[11px] font-medium text-card-foreground shadow-lg">
-            {hover.name}
-          </div>
-        </Html>
-      )}
     </group>
   );
 }
